@@ -1,7 +1,21 @@
 ---
-title: "ESS330_Lab2_Exercises"
+title: "ESS330 Lab 2 Exercises"
 format: html
 editor: visual
+execute:
+  echo: true
+  warning: false
+  message: false
+website:
+  title: "ESS330 Lab 2"
+  navbar:
+    left:
+      - href: index.qmd
+        text: Home
+      - href: analysis.qmd
+        text: Analysis
+      - href: results.qmd
+        text: Results
 ---
 
 ```{r}
