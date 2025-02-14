@@ -4,23 +4,207 @@ format: html
 editor: visual
 ---
 
-## Quarto
-
-Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
-
-## Running Code
-
-When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
-
 ```{r}
-1 + 1
+library(dplyr)
+
 ```
 
-You can add options to executable code like this
-
 ```{r}
-#| echo: false
-2 * 2
+#1-Load and Describe 
+library(readr)
+setwd("C:/Users/laxca/Softwares/Git/ESS330_Lab2/Data")
+tree_dat <- read_csv("tree_dat.csv")
+glimpse(tree_dat)
+
 ```
 
-The `echo: false` option disables the printing of code (only output is displayed).
+This is a dataframe of a forest with records of trees, including their unique ID, their stand ID, the statistics of each tree.
+
+```{r}
+#2-count the number of entries for Stand 1 in the "standID" column
+sum(tree_dat$standID == 1)
+
+```
+
+There are 979 trees in Stand 1.
+
+```{r}
+#3-Count ABBA and PIST
+sum(tree_dat$species == "ABBA" | tree_dat$species == "PIST")
+```
+
+There are 17,221 ABBA and PIST trees.
+
+```{r}
+#4-Sum trees older than 200 years old in last year
+sum(tree_dat$age > 200 & tree_dat$year == 2007)
+```
+
+There are 7 trees older than 200 years old that were found in the last year of the dataset.
+
+```{r}
+#5-Oldest tree
+tree_dat %>% slice_max(order_by = age, n = 1)
+```
+
+The oldest tree is 269 years old.
+
+```{r}
+#6-oldest 5 trees in 2001
+tree_dat %>% filter(year == 2001) %>%
+  slice_max(order_by = age, n = 5)
+```
+
+The oldest 5 trees from 2001 are 263, 259, 212, and two trees that are 2006 years old.
+
+```{r}
+#7- Using slice_sample, how many trees are in a 30% sample of those recorded in 2002?
+tree_dat %>% filter(year == 2002) %>% slice_sample(prop = 0.3) %>% nrow()
+
+```
+
+There are 687 tress from 2002 that would be in that sample.
+
+```{r}
+#8- Filter all trees in stand 5 in 2007. Sort this subset by descending radius at breast height (rad_ib) and use slice_head() to get the top three trees. Report the tree IDs
+tree_dat %>% filter(standID == 5 & year == 2007) %>% arrange(desc(rad_ib)) %>% slice_head(n = 3) %>% select(treeID)
+
+```
+
+The highest radius trees from stand 5, from 2007, are trees 128, 157, and 135.
+
+```{r}
+#9-reduce dataset
+tree_dat %>% select(treeID, standID, year, rad_ib) %>% filter(standID == 3 & year == 2007) %>% slice_min(order_by = rad_ib, n = 3)
+
+
+```
+
+The smallest three trees from 2007 in stand 3 were tree 50, 56 and 36.
+
+```{r}
+#10-Remove stand column
+tree_dat %>% select(-standID) %>% glimpse()
+```
+
+Stand column was removed.
+
+```{r}
+#11- remove columns with ID in the name
+tree_dat %>% select(contains("ID")) %>% glimpse()
+```
+
+StandID and treeID are the ones we could remove.
+
+```{r}
+#12- find columns with ID and Stand
+tree_dat %>% select(contains("ID") | contains("stand")) %>% glimpse()
+```
+
+Now we have the last two columns, as well as the "Stand" column.
+
+```{r}
+#13-rename rad_inc
+tree_dat <- tree_dat %>% rename(rad_mm = rad_ib, inc_mm = inc)
+
+```
+
+The column names were fixed to include the units.
+
+```{r}
+#14-mean BA_m2 of POTR in 2007
+tree_dat <- tree_dat %>% mutate(DBH = rad_mm * .1) %>% mutate(BA_m2 = 0.00007854 * DBH^2) %>% glimpse()
+
+tree_dat %>% filter(species == "POTR" & year == 2007) %>% summarize(mean(BA_m2))
+```
+
+DBH was computed and BA was computed as well (in meters squared.) The mean BA_m2 was 369.6619.
+
+```{r}
+#15- make a column to add boolean T/F if established 5+ yr
+tree_dat <- tree_dat %>% mutate(established = if_else(age > 5, TRUE, FALSE))
+
+```
+
+The column was made.
+
+```{r}
+#16-make new column for classifying each tree into proper DBH_class and limit dataset to 2007 and report the number of each class with count 
+tree_dat <- tree_dat %>% mutate(DBH_class = case_when(DBH < 2.5 ~ "seedling", DBH < 10 ~ "sapling", DBH < 30 ~ "pole", TRUE ~ "sawlog"))
+
+```
+
+Trees were classified by provided categorization statistics.
+
+```{r}
+#17-compute mean and SD dbh in c, fro all 2007 trees 
+tree_dat %>% filter(year == 2007) %>% summarize(mean(DBH), sd(DBH))
+```
+
+The mean DBH of the 2007 tree data illustrates that the average tree was roughly 8 cm. The standard deviation of these trees shows that 75 percent of the trees, if the distribution is normal, is roughly 3 cm more or less than the average DBH. With these two stats, we see that the majority of the trees have a dbh within this range and that the average tree is 8cm DBH.
+
+```{r}
+#18-Compute the per species mean tree age using only those ages recorded in 2003. Identify the three species with the oldest mean age.
+tree_dat %>% filter(year == 2003) %>% group_by(species) %>% summarize(mean_age = mean(age)) %>% arrange(desc(mean_age))
+
+tree_dat %>% filter(year == 2003) %>% group_by(species) %>% summarize(mean_age = mean(age)) %>% arrange(desc(mean_age)) %>% slice_head(n = 3)
+```
+
+The mean tree age from 2003 was computed, including the three with the oldest mean age (Thuja occidentalis, Fraxinus nigra, Pinus strobus)
+
+```{r}
+#19- In a single summarize call, find the number of unique years with records in the data set along with the first and last year recorded?
+tree_dat %>% summarize(unique_years = n_distinct(year), first_year = min(year), last_year = max(year))
+```
+
+The number of unique years with records in the dataset was 111, and the first year was 1897, the last was 2007.
+
+```{r}
+#20-Determine the stands with the largest number of unique years recorded. Report all stands with largest (or tied with the largest) temporal record.
+
+tree_dat %>% group_by(standID) %>% summarize(unique_years = n_distinct(year)) %>% filter(unique_years == max(unique_years))
+
+```
+
+The stands with the largest number of unique years recorded were 1, 15, 16, 17, and 24. All of these had the same number of unique years, 111.
+
+```{r}
+#Final
+
+#Compute annual DBH growth per tree 
+tree_dat <- tree_dat %>%
+  arrange(treeID, year) %>%
+  group_by(treeID) %>%
+  mutate(dbh_growth = DBH - lag(DBH)) %>%
+  ungroup()
+
+#trees with at least a 10yr growth record
+tree_dat_filtered <- tree_dat %>%
+  group_by(treeID) %>%
+  filter(n() >= 10)
+
+#mean and standard deviation of DBH growth by species
+species_growth_stats <- tree_dat_filtered %>%
+  group_by(species) %>%
+  summarise(mean_growth = mean(dbh_growth, na.rm = TRUE),
+            sd_growth = sd(dbh_growth, na.rm = TRUE)) %>%
+  arrange(desc(mean_growth))
+
+# fastest- and slowest-growing species
+fastest_species <- species_growth_stats %>% slice_max(mean_growth, n = 3)
+slowest_species <- species_growth_stats %>% slice_min(mean_growth, n = 3)
+
+# Display results
+
+print(fastest_species)
+
+print(slowest_species)
+
+
+```
+
+The three fastest growing species by mean growth rates, by USDA species codes, were PIRE, POTR and PIBA. The slowest were LALA\< THOC, and QURU.
+
+Image of fastest growing species:
+
+[![Pinus Resinosa](Images/PIRE.jpg)](https://en.wikipedia.org/wiki/Pinus_resinosa)
