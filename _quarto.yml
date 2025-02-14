@@ -7,7 +7,7 @@ website:
     left:
       - href: index.qmd
         text: Home
-  repo-url: https://github.com/YOUR-USERNAME/YOUR-REPO
+  repo-url: https://github.com/CamGit12/ESS330_Lab2/
   repo-actions: [edit, issue]
 
 format:
