@@ -7,12 +7,10 @@ website:
     left:
       - href: index.qmd
         text: Home
-      - href: analysis.qmd
-        text: Analysis
-      - href: results.qmd
-        text: Results
-output:
+  repo-url: https://github.com/YOUR-USERNAME/YOUR-REPO
+  repo-actions: [edit, issue]
+
+format:
   html:
+    theme: cosmo
     toc: true
-    toc-depth: 3
-    number-sections: true
