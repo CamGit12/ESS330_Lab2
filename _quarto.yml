@@ -1,6 +1,6 @@
 project:
   type: website
-  output-dir: docs  # This tells Quarto to generate the site in the docs folder
+  output-dir: docs
 
 website:
   title: "ESS330 Lab 2"
